@@ -819,8 +819,9 @@ vSphere에서 아래 기능을 사용하려면 반드시 공유 스토리지가 
     - 생성된 권장 사항에 대해 [적용] 버튼을 클릭하여 관리자의 승인 아래 수동 마이그레이션을 실행
 5. 최종 검증
     - VM 재배치 완료 후, 클러스터 내 호스트들의 자원 사용률이 평준화되었고, 가상 머신들의 DRS 점수가 회복된 것을 확인
-<img width="1341" height="710" alt="2" src="https://github.com/user-attachments/assets/22f0959b-74a2-4432-8d59-69bfa9c8926b" />
+    <img width="1341" height="710" alt="2" src="https://github.com/user-attachments/assets/22f0959b-74a2-4432-8d59-69bfa9c8926b" />
 
+<br>
 <br>
 
 ## Cluster
