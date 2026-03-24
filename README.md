@@ -462,7 +462,7 @@ vSphere에서 아래 기능을 사용하려면 반드시 공유 스토리지가 
     <img width="1919" height="872" alt="vmk목록" src="https://github.com/user-attachments/assets/3b6c36b4-6ae0-4c97-bef3-98ee8e738fc7" />
 
     
-    1. 다른 ESXi 호스트에서도 같은 네트워크 대역의 커널 포트를 만든다.
+    3. 다른 ESXi 호스트에서도 같은 네트워크 대역의 커널 포트를 만든다.
 
 ### iSCSI 전용 스토리지 어댑터 추가
 
