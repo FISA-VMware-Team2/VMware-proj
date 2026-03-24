@@ -843,7 +843,7 @@ vSphere에서 아래 기능을 사용하려면 반드시 공유 스토리지가 
 
 <aside>
 
-⇒ 따라서, Cluster를 사용함으로써 **자원 통합 + 자동 분산 + 장애 대응** 가능
+   ⇒ 따라서, Cluster를 사용함으로써 **자원 통합 + 자동 분산 + 장애 대응** 가능
 
 </aside>
 
@@ -866,7 +866,7 @@ vSphere에서 아래 기능을 사용하려면 반드시 공유 스토리지가 
 
 ```jsx
 vCenter
- └─ **Cluster**
+ └─ Cluster
       ├─ ESXi Host 1
       ├─ ESXi Host 2
       └─ ESXi Host 3
@@ -883,35 +883,40 @@ vCenter
 ---
 
 ### 실습 과정
-1. Cluster 생성
+1. **Cluster 생성**
 
-1-1) **Datacenter 우클릭 → New Cluster 생성**
+1-1) **Datacenter 우클릭 → New Cluster 생성** <br>
     - ‘새 클러스터’ 클릭
-    
-    <img width="669" height="296" alt="Image" src="https://github.com/user-attachments/assets/72e43ee7-32f5-4f9f-97ae-87f54ed90908" />
+    <br>
+    <img width="430" height="145" alt="Image" src="https://github.com/user-attachments/assets/60eedc25-40ff-4423-b280-c18c9ef9ea32" />
 
-    
+<br>
+
 1-2) **옵션 설정**
+    <br>
     - DRS 활성화
+    <br>
     - HA 활성화
-    
-    ![image.png](attachment:af0d2457-d561-49c4-84c9-e9d49f514139:image.png)
-    
-
+    <br>
+    <img width="432" height="180" alt="Image" src="https://github.com/user-attachments/assets/a1880d4b-557d-46b4-ab88-57f31b278e39" />
+    <br>
 사진 출처: https://yoonix.tistory.com/56
 
-2. ESXi Host 추가
+<br>
 
-2-1) **생성한 Cluster에 Host 추가**
-    - Host를 Cluster로 끌어서 놓으면 이동됨
+2. **ESXi Host 추가**
+
+2-1) **생성한 Cluster에 Host 추가** <br>
+    - Host를 Cluster로 끌어서 놓으면 이동됨 <br>
     
     → 각 Host의 CPU, Memory가 하나의 Pool로 통합됨
     
+<br>
 
-3. VM 배치 및 테스트
+3. **VM 배치 및 테스트**
 
 3-1) **VM을 특정 Host가 아닌, Cluster에 배치**
-3-2) **vMotion을 통해 Host 간 이동 테스트**
+3-2) **vMotion을 통해 Host 간 이동 테스트** <br>
     
     ⇒ 결과: VM 위치와 상관없이 서비스 지속 가능
     
@@ -965,10 +970,10 @@ vCenter
 
 ```jsx
 Cluster
- ├─ **Resource Pool A** (개발)
+ ├─ Resource Pool A (개발)
  │   ├─ VM1
  │   └─ VM2
- └─ **Resource Pool B** (운영)
+ └─ Resource Pool B (운영)
      ├─ VM3
      └─ VM4
 ```
@@ -988,37 +993,40 @@ Cluster
 
 ### 실습 과정
 
-1. Resource Pool 생성
+1. **Resource Pool 생성**
 
-1-1) **Cluster 우클릭 → New Resource Pool 생성**
+1-1) **Cluster 우클릭 → New Resource Pool 생성** <br>
 1-2) **용도별 Pool 생성**
     
     ex) 개발 Pool, 운영 Pool etc . . .
-    
 
-2. VM 분류 및 할당
+<br>
 
-2-1) **각 VM을 용도에 맞는 Pool로 분류**
+2. **VM 분류 및 할당**
+
+2-1) **각 VM을 용도에 맞는 Pool로 분류** <br>
     
     ex) 테스트 VM → 개발 Pool
     
     ⇒ VM을 목적 기반으로 그룹화
     
+<br>
 
-3. 자원 정책 설정
+3. **자원 정책 설정**
 
 3-1) **각 Pool별로 Reservation, Limit, Shares 설정**
     
-    
-    |  | **Reservation** | **Limit** | **Shares** |
-    | --- | --- | --- | --- |
-    | **운영 Pool** | 설정 - 최소 자원 보장 |  | High |
-    | **개발 Pool** |  | 설정 - 자원 사용 제한 | Low |
+| 구분       | Reservation (최소 보장)        | Limit (최대 제한)        | Shares |
+|------------|-------------------------------|--------------------------|--------|
+| 운영 Pool  | 설정 - 최소 자원 보장         |                          | High   |
+| 개발 Pool  |                               | 설정 - 자원 사용 제한    | Low    |
 
-4. 동작 테스트
+<br>
 
-4-1) **여러 VM을 동시에 실행**
-4-2) **부하 상황 가정**
+4. **동작 테스트**
+
+4-1) **여러 VM을 동시에 실행** <br>
+4-2) **부하 상황 가정** <br>
     
     ⇒ Resource Pool 설정값에 따른 결과:
     
@@ -1036,6 +1044,8 @@ Cluster
 
 ---
 
+<br>
+
 ## Cluster + Resource Pool
 
 ```java
@@ -1048,6 +1058,11 @@ vCenter
       └─ Resource Pool (개발)
            └─ Test VM 
 ```
+<br>
+<br>
+
+---
+
 ## 🔐 ESXi 사용자 계정 생성 및 권한 부여
 
 
