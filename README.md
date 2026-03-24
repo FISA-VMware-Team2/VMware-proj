@@ -121,6 +121,146 @@
 <br/>
 <br/>
 
+## ESXi 클러스터 구조
+
+### 전체 구조
+
+<aside>
+
+여러 ESXi Host를 하나의 클러스터로 묶고, 네트워크를 역할별로 분리해 안정성과 확장성을 확보한 구조
+
+</aside>
+
+---
+
+### 구성
+
+- ESXi-01 ~ ESXi-12 (총 12대 서버)
+- 각각 독립된 물리 서버
+- 하나의 **Cluster**로 묶임
+<img width="757" height="466" alt="Image" src="https://github.com/user-attachments/assets/ebccfddf-0da9-483b-b8c8-22c874ed0797" />
+
+> ESXi 한 대 내부 구조를 확대한 상세 설계도
+> 
+
+---
+
+## 상단 ESXi Host 구성
+
+## ESXi-01 / ESXi-02
+
+- 각각 하나의 물리 서버
+- IP:
+    - ESXi-01 → 172.16.10.11
+    - ESXi-02 → 172.16.10.12
+
+이 IP는 **관리망(Management Network)**
+
+---
+
+### VM 구성
+
+각 Host 내부 
+
+- Windows VM
+- Rocky Linux VM
+
+```
+1개의 ESXi = 여러 VM을 실행하는 가상화 서버
+```
+
+---
+
+### vSwitch 구조
+
+- vSwitch 구성
+
+| vSwitch | 역할 |
+| --- | --- |
+| vSwitch0 | VM Network + Management |
+| vSwitch1 | Storage |
+| vSwitch2 | vMotion |
+| vSwitch3 | Fault Tolerance |
+
+## 각 vSwitch 상세 설명
+
+## ⚫ vSwitch0 (가장 중요)
+
+### 포함 네트워크
+
+- VM Network (보라)
+- Management (주황)
+
+---
+
+### 역할
+
+두 가지 기능 동시에 수행
+
+VM 트래픽
+
+- 사용자 접속 (웹, 서비스)
+
+관리 트래픽
+
+- vCenter 접속
+- ESXi 관리
+
+---
+
+## 🟢 vSwitch1 (Storage)
+
+### 역할
+
+- NFS / iSCSI 연결
+
+### 모든 ESXi가 같은 스토리지 사용 가능
+
+```
+ESXi-01 ↔ Storage ↔ ESXi-02
+```
+
+VM 이동 가능 (vMotion, HA)
+
+---
+
+## 🟣 vSwitch2 (vMotion)
+
+### 역할
+
+- VM 메모리 이동 전용 네트워크
+
+---
+
+### 동작
+
+```
+ESXi-01 → ESXi-02
+VM 이동 (서비스 끊김 없음)
+```
+
+Live Migration
+
+---
+
+## 🔴 vSwitch3 (Fault Tolerance)
+
+### 역할
+
+- VM 복제 트래픽
+
+---
+
+Primary VM + Secondary VM 동기화
+
+```
+Primary VM → Secondary VM 실시간 복제
+```
+
+장애 시 즉시 전환 (무중단)
+
+---
+
 ## 구성원 별 Data Center 개요
 
 
@@ -709,3 +849,200 @@ vCenter
       └─ Resource Pool (개발)
            └─ Test VM 
 ```
+## 🔐 ESXi 사용자 계정 생성 및 권한 부여
+
+
+>💡사용자 계정을 생성하는 것과 실제 관리 권한을 부여하는 것은 별개의 단계
+
+
+ **계정 생성 = 로그인 가능**
+
+ **권한 부여 = 작업 수행 가능**
+
+---
+
+### 1단계: 사용자 계정 생성 (Create User)
+
+**접속 경로**
+
+```
+https://esxi07.team1.com 접속 → root 로그인
+  → 관리 (Manage)
+    → 보안 및 사용자 (Security & users)
+      → 사용자 (Users)
+        → 사용자 추가 (Add user)
+```
+
+---
+
+### 2단계: 권한 할당 (Assign Permissions)
+
+**접속 경로**
+
+```
+왼쪽 최상단 → 호스트 (Host)
+  → 작업 (Actions)
+    → 권한 (Permissions)
+      → 권한 추가 (Add permission
+```
+
+<img width="1919" height="1013" alt="Image" src="https://github.com/user-attachments/assets/a2a0f016-3c54-49de-9d87-54c7a6e12212" />
+
+<img width="1919" height="1013" alt="Image" src="https://github.com/user-attachments/assets/bdbcd22c-bf94-4d18-b939-c12f6482dc01" />
+
+<img width="1919" height="1023" alt="image" src="https://github.com/user-attachments/assets/ca846b8a-20d1-4f48-9082-f1a140cb52e1" />
+
+
+---
+
+## 🔒Lockdown Mode (잠금 모드)
+
+>💡직접 접근(웹, SSH)을 차단하여 보안을 강화하는 기능
+
+---
+
+### 모드별 접근 제한 비교
+
+| 접근 경로 | Disabled | Normal | Strict |
+| --- | --- | --- | --- |
+| vCenter 관리 | ✅ | ✅ (필수) | ✅ (필수) |
+| ESXi 웹/SSH | ✅ | ❌ | ❌ |
+| DCUI (물리 콘솔) | ✅ | ⚠️ (예외 사용자만) | ❌ |
+| 보안 수준 | 낮음 | 높음 | 매우 높음 |
+
+---
+
+### 모드별 특징
+
+### Disabled (기본)
+
+- 모든 접근 허용
+- 실습 환경에 적합
+- 보안 취약
+
+---
+
+### Normal (권장)
+
+- 웹 / SSH 차단
+- DCUI는 예외 사용자만 접근 가능
+- vCenter 장애 시 복구 가능
+
+**기업 표준 모드**
+
+---
+
+### Strict (최고 보안)
+
+- 모든 직접 접근 차단 (DCUI 포함)
+- vCenter 없으면 관리 불가
+
+ **금융/국방 수준 보안**
+
+---
+
+### Lockdown Mode 설정 방법
+
+```
+vCenter → ESXi 호스트 선택
+  → 구성 (Configure)
+    → 시스템 (System)
+      → 보안 프로필 (Security Profile)
+        → 잠금 모드 (Lockdown Mode) → 편집 (Edit)
+```
+
+모드 선택 (Normal / Strict)
+
+---
+
+## 예외 사용자 (Exception User)
+
+>💡잠금 모드에서도 직접 접근 가능한 **특수 관리자 계정**
+
+---
+
+### 역할
+
+| 잠금 모드 | 일반 사용자 | 예외 사용자 |
+| --- | --- | --- |
+| Disabled | 모든 접근 가능 | 의미 없음 |
+| Normal | 직접 접근 불가 | DCUI 접근 가능 |
+| Strict | 모든 접근 불가 | 유일한 접근 가능 계정 |
+
+---
+
+### 설정 방법
+
+```
+Lockdown Mode 설정 화면
+  → 예외 사용자 (Exception User)
+    → 사용자 추가
+```
+
+<img width="1919" height="1020" alt="image" src="https://github.com/user-attachments/assets/3b38a6db-abe5-4c23-8db0-2189e1a4b3ff" />
+
+
+## 🔔  Alarm (알람 / 모니터링)
+
+>💡알람(Alarm)은 VMware 환경에서 특정 조건(이벤트 또는 임계값)이 발생했을 때  **자동으로 상태를 감지하고 관리자에게 경고를 발생시키는 기능**
+
+---
+
+### 알람 구성 요소
+
+알람은 다음 3가지 요소로 구성됩니다.
+
+| 구성 요소 | 설명 |
+| --- | --- |
+| Trigger | 알람이 발생하는 조건 (CPU, Memory, 상태 변화 등) |
+| Status | 상태 변화 (Green → Yellow → Red) |
+| Action | 알림 방식 (이메일, 이벤트 기록 등) |
+
+| 상태 | 의미 |
+| --- | --- |
+| 🟢 Green | 정상 |
+| ⚠️ Yellow (주의) | 이상 징후 / 자동 복구 발생 |
+| 🔴 Red | 심각한 장애 |
+
+---
+
+### 알람 생성 방법 (vCenter 기준)
+
+### 1단계: 알람 생성
+
+```
+vCenter 접속
+  → 객체 선택 (Host / VM / Datastore)
+    → 구성 (Configure)
+      → Alarm Definitions
+        → New Alarm
+```
+
+---
+
+### 2단계: 알람 설정
+
+### 기본 설정
+
+- 이름:  Host CPU Usage Alarm
+- 대상: Host
+
+---
+
+### Trigger 설정
+
+예: CPU 사용률 기반
+
+- 조건: CPU Usage
+- 임계값:
+    - Warning: 80%
+    - Critical: 90%
+
+---
+
+### Action 설정
+
+- 알람 발생 시 이벤트 기록
+- 상태 변경 시 알림 발생
+
+<img width="1582" height="785" alt="Image" src="https://github.com/user-attachments/assets/cbb4945e-bd32-487d-9e14-fe32e61a5aa2" />
