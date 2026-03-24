@@ -33,7 +33,7 @@
 
 ## vcenter 구성도
 
-![image.png](attachment:8584877d-1346-42f3-bb56-5edaa491b894:image.png)
+<img width="729" height="630" alt="1" src="https://github.com/user-attachments/assets/b2f8ef54-4840-4d0f-8334-3f80599e8d85" />
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### 서비스 서버
 
-![image.png](attachment:41c2cf10-f0ea-4795-bcda-fd34d49bc29b:image.png)
+<img width="820" height="167" alt="2" src="https://github.com/user-attachments/assets/4004863d-1d31-46e5-be9b-f77f39b50918" />
 
 | 서버 종류 | 할당 IP | 역할 |
 | --- | --- | --- |
@@ -58,7 +58,8 @@
 
 - 가상 트래픽을 물리 랜카드로 전달하는 중계기 역할
 
-![image.png](attachment:c0371aa6-d352-485a-906a-82b1ac6b8ada:image.png)
+<img width="1676" height="168" alt="3" src="https://github.com/user-attachments/assets/2ffbf08b-44c8-4add-b4a6-999b70c1102e" />
+
 
 | 가상 스위치 | 구성 요소 (Port Group / VMkerenel) | 연결된 외부 서비스 | 상세 설명 |
 | --- | --- | --- | --- |
@@ -84,7 +85,8 @@
 
 - 가상 호스트들을 구동하는 실제 물리 서버로, 모든 가상 트래픽은 Server ESXi의 vmnic을 통해 외부로 나감
 
-![image.png](attachment:620773c9-5c05-49a6-aca9-1a3fd2b0f6d4:image.png)
+<img width="1627" height="481" alt="4" src="https://github.com/user-attachments/assets/7a64e529-9968-41c5-8bea-95204a095ad3" />
+
 
 | 종류 | 용도  | 할당 대역 | 설명 |
 | --- | --- | --- | --- |
@@ -98,7 +100,8 @@
 
 - 독립적으로 동작하는 가상 호스트들
 
-![image.png](attachment:53f62336-b696-4055-983e-c0408ff7c2bf:image.png)
+<img width="1919" height="478" alt="5" src="https://github.com/user-attachments/assets/52642742-c5a5-4d73-aa7a-4f9bab8a779d" />
+
 
 - 가상 호스트별 IP 설정
     - ESXi-01
