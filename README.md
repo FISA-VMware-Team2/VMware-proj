@@ -354,3 +354,231 @@ DNS가 정상 동작하지 않으면
 - 이름 기반 관리 어려움
 - 서비스 간 연결 실패 가능성
 - 운영 시 IP를 직접 기억해야 하므로 관리 효율 저하가 발생할 수 있음
+
+
+<br><br>
+
+## Cluster
+
+> VMware vCenter에서 **여러 ESXi 호스트를 하나로 묶어 관리**하는 논리적 단위
+> 
+
+여러 ESXi 호스트를 하나로 묶음으로써 CPU, Memory 등 자원을 통합 관리하는 구조
+
+- 추후 등장할 HA, DRS, vMotion과 같은 기능을 사용하기 위한 **기반 환경**
+
+---
+
+### 사용 이유
+
+1. 개별 서버 단위로 관리하면 **비효율적**
+2. 특정 호스트에 부하 집중된다면 **성능 저하** 발생
+3. 장애 발생 시 대응 어려움
+
+<aside>
+
+⇒ 따라서, Cluster를 사용함으로써 **자원 통합 + 자동 분산 + 장애 대응** 가능
+
+</aside>
+
+---
+
+### 주요 기능
+
+1. **리소스 통합 관리**
+: 여러 호스트의 CPU, 메모리를 하나처럼 사용
+2. **vMotion**
+: VM을 다운타임 없이 다른 호스트로 이동
+3. **DRS** (= 자동 자원 분배)
+: 부하에 따라 VM을 자동으로 재배치
+4. **HA**
+: 호스트 장애 시 VM을 다른 호스트에서 자동 재시작
+
+---
+
+### 구조
+
+```jsx
+vCenter
+ └─ **Cluster**
+      ├─ ESXi Host 1
+      ├─ ESXi Host 2
+      └─ ESXi Host 3
+```
+
+---
+
+### 동작 흐름
+
+1. VM 실행 → 특정 Host에 배치
+2. 부하 발생 → DRS가 다른 Host로 이동
+3. Host 장애 발생 → HA가 VM 재시작
+
+---
+
+### 실습 과정
+1. Cluster 생성
+
+1-1) **Datacenter 우클릭 → New Cluster 생성**
+    - ‘새 클러스터’ 클릭
+    
+    <img width="669" height="296" alt="Image" src="https://github.com/user-attachments/assets/72e43ee7-32f5-4f9f-97ae-87f54ed90908" />
+
+    
+1-2) **옵션 설정**
+    - DRS 활성화
+    - HA 활성화
+    
+    ![image.png](attachment:af0d2457-d561-49c4-84c9-e9d49f514139:image.png)
+    
+
+사진 출처: https://yoonix.tistory.com/56
+
+2. ESXi Host 추가
+
+2-1) **생성한 Cluster에 Host 추가**
+    - Host를 Cluster로 끌어서 놓으면 이동됨
+    
+    → 각 Host의 CPU, Memory가 하나의 Pool로 통합됨
+    
+
+3. VM 배치 및 테스트
+
+3-1) **VM을 특정 Host가 아닌, Cluster에 배치**
+3-2) **vMotion을 통해 Host 간 이동 테스트**
+    
+    ⇒ 결과: VM 위치와 상관없이 서비스 지속 가능
+    
+
+---
+
+### Cluster 구성 시 주의사항
+
+- 모든 Host는 동일한 네트워크 및 스토리지 접근 필요
+- vMotion을 위한 **VMkernel 설정** 필수
+- HA 사용 시 충분한 여유 자원 확보 필요
+
+---
+<br><br>
+
+## Resource Pool
+
+### 개념
+
+> **Cluster 내에서** CPU와 메모리를 논리적으로 **나누어 관리**하는 단위 <br>
+→ VM들을 그룹으로 묶어서 **자원 사용을 제어**하는 구조
+> 
+
+---
+
+### 사용 이유
+
+1. VM 간 **자원 경쟁** 발생
+2. 중요 서비스 **성능 저하** 가능성 존재
+
+<aside>
+
+⇒ Resource Pool을 통해, **자원 보장 + 제한 + 우선순위 제어** 가능
+
+</aside>
+
+---
+
+### 주요 설정 요소
+
+- **Reservation (= 최소 보장)**
+: 특정 VM 또는 그룹에 최소 자원 보장
+- **Limit (= 최대 제한)**
+: 사용할 수 있는 자원의 최대치 제한
+- **Shares (= 우선순위)**
+: 자원이 부족할 때 누가 더 많이 사용할지 결정
+
+---
+
+### 구조
+
+```jsx
+Cluster
+ ├─ **Resource Pool A** (개발)
+ │   ├─ VM1
+ │   └─ VM2
+ └─ **Resource Pool B** (운영)
+     ├─ VM3
+     └─ VM4
+```
+
+---
+
+### 동작 원리
+
+1. 모든 VM이 자원 요청
+2. Cluster 전체 자원 기준으로 분배
+3. Resource Pool 정책 적용
+    - Reservation → 먼저 확보
+    - Shares → 우선순위 반영
+    - Limit → 최대치 제한
+
+---
+
+### 실습 과정
+
+1. Resource Pool 생성
+
+1-1) **Cluster 우클릭 → New Resource Pool 생성**
+1-2) **용도별 Pool 생성**
+    
+    ex) 개발 Pool, 운영 Pool etc . . .
+    
+
+2. VM 분류 및 할당
+
+2-1) **각 VM을 용도에 맞는 Pool로 분류**
+    
+    ex) 테스트 VM → 개발 Pool
+    
+    ⇒ VM을 목적 기반으로 그룹화
+    
+
+3. 자원 정책 설정
+
+3-1) **각 Pool별로 Reservation, Limit, Shares 설정**
+    
+    
+    |  | **Reservation** | **Limit** | **Shares** |
+    | --- | --- | --- | --- |
+    | **운영 Pool** | 설정 - 최소 자원 보장 |  | High |
+    | **개발 Pool** |  | 설정 - 자원 사용 제한 | Low |
+
+4. 동작 테스트
+
+4-1) **여러 VM을 동시에 실행**
+4-2) **부하 상황 가정**
+    
+    ⇒ Resource Pool 설정값에 따른 결과:
+    
+    - 운영 Pool VM이 우선적으로 자원 확보
+    - 개발 VM은 제한된 자원 내에서 동작
+
+---
+
+### Resource Pool 설계 시 주의사항
+
+- 과도한 Reservation 설정 시 다른 VM 사용 불가
+- Limit 설정 시 성능 저하 발생 가능
+- Shares는 상대적인 값이므로 전체 구조 고려 필요
+
+
+---
+
+## Cluster + Resource Pool
+
+```java
+vCenter
+ └─ Cluster
+      ├─ ESXi Host 1
+      ├─ ESXi Host 2
+      ├─ Resource Pool (운영)
+      │    └─ Web VM
+      └─ Resource Pool (개발)
+           └─ Test VM 
+```
