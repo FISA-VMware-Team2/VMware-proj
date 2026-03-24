@@ -2,7 +2,7 @@
 
 | ![](https://avatars.githubusercontent.com/u/107402806?v=4) | ![](https://avatars.githubusercontent.com/u/113874212?v=4) | ![](https://avatars.githubusercontent.com/u/215618778?v=4) |![](https://avatars.githubusercontent.com/u/181299322?v=4)|![](https://avatars.githubusercontent.com/u/89902255?v=4)|![](https://avatars.githubusercontent.com/u/113014598?v=4)|
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| **김소연**<br>[@thdus](https://github.com/thdus) | **사재헌**<br>[@Zaixian5](https://github.com/Zaixian5) | **서주영**<br>[@young2z1](https://github.com/janie71) | **신성혁**<br>[@ssh221](https://github.com/ssh221) | **유예원**<br>[@Yewon0106](https://github.com/Yewon0106) | **주용완**<br>[@YongwanJoo](https://github.com/YongwanJoo) |
+| **김소연**<br>[@thdus](https://github.com/thdus) | **사재헌**<br>[@Zaixian5](https://github.com/Zaixian5) | **서주영**<br>[@young2z1](https://github.com/young2z1) | **신성혁**<br>[@ssh221](https://github.com/ssh221) | **유예원**<br>[@Yewon0106](https://github.com/Yewon0106) | **주용완**<br>[@YongwanJoo](https://github.com/YongwanJoo) |
 
 ## 프로젝트 소개
 
