@@ -22,10 +22,10 @@
 
 | 용도 | 대역 | 설명 |
 | :--- | :--- | :--- |
-| **Management & VM Network** (O Black) | `172.16.10.X/24` | 호스트 관리 및 VM의 서비스 통신용 |
-| **Fault Tolerance 망** (O Red) | `172.16.20.X/24` | FT 기능을 위한 호스트 간 실시간 데이터 동기화용 |
-| **vMotion 망** (O Pink) | `172.16.30.X/24` | vMotion 시 메모리 데이터 전송 전용 |
-| **Storage 망** (O Green) | `172.16.40.X/24` | 공유 스토리지(iSCSI / NFS) 접근용 |
+| **Management & VM Network** (Black) | `172.16.10.X/24` | 호스트 관리 및 VM의 서비스 통신용 |
+| **Fault Tolerance 망** (Red) | `172.16.20.X/24` | FT 기능을 위한 호스트 간 실시간 데이터 동기화용 |
+| **vMotion 망** (Pink) | `172.16.30.X/24` | vMotion 시 메모리 데이터 전송 전용 |
+| **Storage 망** (Green) | `172.16.40.X/24` | 공유 스토리지(iSCSI / NFS) 접근용 |
 
 ### 📌 설계 의도
 - 트래픽 분리 → 성능 + 안정성 확보
@@ -46,12 +46,9 @@
 | 서버 종류 | 할당 IP | 역할 |
 | --- | --- | --- |
 | DNS (vcenter.team2.com) | 172.16.10.2 / 24 | 도메인 기반 통신 담당 |
-| NAT |   • 172.16.10.4 / 24
-  • 자동 IP | 내부망 서버들이 외부 인터넷에 접속할 수 있도록 주소를 변환 |
+| NAT |   • 172.16.10.4 / 24<br>• 자동 IP | 내부망 서버들이 외부 인터넷에 접속할 수 있도록 주소를 변환 |
 | NTP | 172.16.10.3 / 24 | 모든 호스트와 가상머신의 시간들을 동기화 |
-| Shared Sorage (iSCSI) |   • 172.16.10.11 / 24
-  • 172.16.40.1 / 24 |   • 모든 호스트가 공유하는 저장소
-  • 윈도우 기반 iSCSI으로 구성됨 |
+| Shared Sorage (iSCSI) |   • 172.16.10.11 / 24<br>• 172.16.40.1 / 24 |   • 모든 호스트가 공유하는 저장소<br>• 윈도우 기반 iSCSI으로 구성됨 |
 | Web Server (NFS) | 172.16.10.5 / 24 | 파일 공유 및 웹 서비스 제공  |
 
 ### 가상 스위치
@@ -63,21 +60,9 @@
 
 | 가상 스위치 | 구성 요소 (Port Group / VMkerenel) | 연결된 외부 서비스 | 상세 설명 |
 | --- | --- | --- | --- |
-| vSwitch0 |   • VM Network
-  • Management Network (172.16.10.101 / 24) |   • VM Network
-      ◦ DNS
-      ◦ NAT
-      ◦ NTP
-      ◦ Shared Storage (iSCSI)
-      ◦ NFS
-      ◦ 가상 ESXi의 VM Network |   • 물리 호스트(10.101)의 관리 기능을 수행하며, DNS/NTP/NAT 등의 서버들을 연결
-  • 가상 ESXi들의 트래픽이 외부망으로 나가는 관문 역할 |
-| vSwitch1 | I-PG (Internet Port Group) |   • NAT
-  • DHCP | NAT 서버를 통해 내부 사설망 VM들이 DHCP와 통신할 수 있는 물리적 통로 제공 |
-| vSwitch2 |   • Storage-PG
-  • iSCSI-VMK (172.16.40.2 / 24) |   • Shared Storage (iSCSI)
-  • 가상 ESXi의 iSCI-VMK
-  • DHCP | iSCSI 프로토콜 기반의 대용량 데이터 I/O 처리 |
+| vSwitch0 |   • VM Network<br>• Management Network (172.16.10.101 / 24) |   • VM Network<br> •DNS<br>• NAT<br>• NTP<br>• Shared Storage (iSCSI)<br>• NFS<br>• 가상 ESXi의 VM Network |   • 물리 호스트(10.101)의 관리 기능을 수행하며, DNS/NTP/NAT 등의 서버들을 연결<br>• 가상 ESXi들의 트래픽이 외부망으로 나가는 관문 역할 |
+| vSwitch1 | I-PG (Internet Port Group) |   • NAT<br>• DHCP | NAT 서버를 통해 내부 사설망 VM들이 DHCP와 통신할 수 있는 물리적 통로 제공 |
+| vSwitch2 |   • Storage-PG<br>• iSCSI-VMK (172.16.40.2 / 24) |   • Shared Storage (iSCSI)<br>• 가상 ESXi의 iSCI-VMK<br>• DHCP | iSCSI 프로토콜 기반의 대용량 데이터 I/O 처리 |
 | vSwitch3 | vMotion-PG | 가상 ESXi의 vMotion-VMK | vMotion 실행 시 발생하는 호스트 간 메모리 복제 트래픽 처리 |
 | vSwitch4 | FT-PG | 가상 ESXi의 FT-VMK | FT 기능이 활성화된 VM의 데이터  상태를 실시간으로 미러링 |
 
