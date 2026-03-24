@@ -1,4 +1,4 @@
-# 📍 VMware 가상화 실습
+#  VMware 가상화 실습
 
 ## 프로젝트 소개
 
@@ -8,7 +8,7 @@
 
 <br/>
 
-## ✍️ 전체 아키텍처
+## 🏛️ 전체 아키텍처
 <img width="5586" height="2888" alt="Image" src="https://github.com/user-attachments/assets/c3a30625-9425-4e09-996b-e4ded026a540" />
 
 <br/>
