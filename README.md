@@ -12,6 +12,32 @@
 
 <br/>
 
+---
+## 📑 목차
+
+1. [전체 아키텍처](#️-전체-아키텍처)
+2. [네트워크 설계](#-네트워크-설계)
+3. [vcenter 구성도](#vcenter-구성도)
+4. [Server ESXi 아키텍처](#server-esxi-아키텍처)
+5. [ESXi 클러스터 구조](#esxi-클러스터-구조)
+6. [상단 ESXi Host 구성](#상단-esxi-host-구성)
+7. [각 vSwitch 상세 설명](#각-vswitch-상세-설명)
+8. [구성원 별 Data Center 개요](#구성원-별-data-center-개요)
+9. [DHCP (Dynamic Host Configuration Protocol)](#dhcp-dynamic-host-configuration-protocol)
+10. [NTP (Network Time Protocol)](#ntp-network-time-protocol)
+11. [DNS (Domain Name System)](#dns-domain-name-system)
+12. [공유 스토리지(Shared Storage)](#공유-스토리지shared-storage)
+13. [Cluster](#cluster)
+14. [Resource Pool](#resource-pool)
+15. [ESXi 사용자 계정 생성 및 권한 부여](#-esxi-사용자-계정-생성-및-권한-부여)
+16. [Lockdown Mode (잠금 모드)](#lockdown-mode-잠금-모드)
+17. [Alarm (알람 / 모니터링)](#--alarm-알람--모니터링)
+18. [HA (High Availability)](#hahigh-availability)
+19. [FT (Fault Tolerance)](#ft-fault-tolerance)
+20. [트러블 슈팅](#트러블-슈팅)
+
+---
+
 ## 🏛️ 전체 아키텍처
 <img width="5586" height="2888" alt="Image" src="https://github.com/user-attachments/assets/c3a30625-9425-4e09-996b-e4ded026a540" />
 
@@ -1046,3 +1072,171 @@ vCenter 접속
 - 상태 변경 시 알림 발생
 
 <img width="1582" height="785" alt="Image" src="https://github.com/user-attachments/assets/cbb4945e-bd32-487d-9e14-fe32e61a5aa2" />
+
+---
+
+## HA(High Availability)
+
+> 클러스터 내 호스트 (ESXi) 및 호스트 내의 VM/내부 애플리케이션에 장애 발생 시, VM을 클러스터 내의 정상 호스트에서 재시작 하거나 이상이 있는 VM을 재시동 시키는 장애 대처 방안
+
+---
+
+### HA가 필요한 3가지 사항
+
+1. VM이 올라가 있는 호스트에 문제가 있는 경우
+2. 호스트는 정상이지만 VM에 문제가 있는 경우
+3. 호스트와 VM 모두 정상이지만 VM 내부 애플리케이션에 문제가 있는 경우
+
+---
+
+### 1. VM이 올라가 있는 호스트에 문제가 있는 경우
+
+> 클러스터 내의 다른 호스트에 VM을 재시작함으로 장애 대응 가능
+
+부하를 자원에 맞게 분산하는 DRS와 혼동하는 경우가 많지만 각 각의 목적이 장애 대응과 자원 활용성이라는 점에서 차이가 존재
+
+### Admission Control
+
+vSphere에서 HA를 달성하기 위해 Admission Control을 진행할 수 있는데, Admission Control이란 장애 발생 시 VM을 재시작할 수 있는 “여유 리소스를 미리 확보하는 정책”
+
+Admission Control을 설정하지 않는 경우 평소에 클러스터 내의 모든 호스트 자원을 전부 사용하여 호스트에 장애가 생겨도 다른 호스트에 VM을 재시작할 자원이 없어 HA 동작 실패 가능
+
+### Admission Control 방법
+
+
+<img width="1376" height="1192" alt="image" src="https://github.com/user-attachments/assets/fb2f3df7-700a-42b1-be3c-4aa9aabc9c43" />
+출처: https://www.bdrshield.com/blog/vmware-for-beginners-vsphere-ha-configuration-part-12c/
+
+1. Host Failures Cluster Tolerates (가장 일반적)
+    1-1. 클러스터 내 호스트 몇 대까지 장애 허용할 것인지 정함
+    1-2. 가장 직관적으로 이해 가능
+2. Percentage of Cluster Resources Reserved
+    2-1. CPU/Memory를 %로 예약하여 HA를 구성하는 방식
+    2-2. 클러스터가 클수록 더 유연하고 정확한 관리가 가능
+3. Specify Failover Hosts
+    3-1. 특정 호스트를 HA를 위한 **대기**용으로 비워두는 방식
+    3-2. 자원 낭비가 심하기 때문에 거의 안씀
+4. Slot 
+    4-1. Slot: VM 하나가 필요로 하는 최소 리소스 단위
+    4-2. Slot의 크기는 **가장 큰 VM**을 기준으로 하기 때문에 자원 낭비가 심함
+    4-3. 과거에는 많이 사용하였으나 현재는 잘 사용되지 않음
+
+---
+
+### 2. 호스트에는 문제가 없지만 VM에 문제가 있는 경우
+
+> VM을 해당 호스트에서 재시작하여 장애 대응
+
+VM의 경우 Guest OS가 응답을 멈추거나 설정 문제로 인해 장애가 발생 가능
+HA가 VMware Tools 기반의 VM heartbeat를 확인하여 응답이 없으면 VM만 재시작 하여 대응 가능
+- 해당 경우 Heartbeat를 위한 데이터 스토어가 2개 이상 필요
+
+---
+
+### 3. 호스트와 VM 모두 정상이지만 내부 애플리케이션에 문제가 있는 경우
+
+> DB나 WAS에 장애가 발생하여 애플리케이션만 장애가 발생한 경우 VM을 재시작하거나 애플리케이션 자체를 재시작 하는 방법으로 HA를 달성 가능
+
+---
+
+### HA 설정 방법
+
+<img width="855" height="600" alt="image" src="https://github.com/user-attachments/assets/dd3c0ea7-57f8-494d-9646-e99d0a0a4ef5" />
+출처: https://www.cloudbolt.io/vmware-administration/vmware-ha/
+
+HA의 경우 다음과 같은 방식으로 설정 가능
+
+1. vCenter의 Datacenter 내의 cluster를 우클릭
+2. 설정 클릭
+3. vSphere Availability 클릭
+4. Edit 내의 vSphere HA 활성화
+
+각 항목에 대한 설명
+
+- Host Failure Response: 호스트 자체가 죽었을 때 설정
+- Response for Host Isolation: 호스트는 정상이지만 클러스터와 통신이 안되는 고립 상태인 설정
+- Datastore with PDL(Permanent Device Loss): 데이터 스토리지가 영구적으로 사라졌다고 판단되는 상태의 설정
+- Datastore with APD(All Paths Down): 데이터 스토리지로 가는 모든 경로가 끊겨 있으나 영구적인지 아닌지 확실하지 않은 상태의 설정
+- VM Monitoring: 호스트가 정상이고 VM이 켜져있으나 OS에 장애가 생긴 상태의 설정 (Heartbeat를 통해 판단)
+
+---
+
+## FT (Fault Tolerance)
+
+> HA의 경우 VM 재시작을 위한 중단 시간이 존재하지만 서비스의 연속성이 매우 중요한 경우 서비스에 단 1초에 중단도 허용하지 않는 Fault Tolerance 를 이용
+
+HA와는 다르게 FT는 VM을 실행 할 때 다른 호스트에 똑같은 복사본(VM)을 실시간으로 하나 더 만듬
+
+- Zero Downtime: 주 서버의 VM에 장애가 생겨도 보조 서버의 VM이 즉시 이어받기 때문에 서비스 중단 시간이 0
+- Zero Data Loss: 데이터 손실이 전혀 없고 네트워크 연결이 유지
+- 실시간 동기화: Fast Checkpointing 기술을 사용하여 주 VM의 메모리 상태를 보조 VM에 지속적으로 복사하여 두 서버를 항상 동일한 상태로 유지
+
+---
+
+### FT의 단계별 동작 방식
+
+1. 초기 복제: FT를 활성화 시 주 VM의 메모리 데이터를 보조 VM이 생성되는 호스트로 복제하여 보조 VM 생성
+2. 데이터 동기화: 주 VM에서 발생하는 모든 변화를 **FT Logging Network** 를 통해 보조 VM으로 실시간 전달
+3. 장애 발생 시 전환: 주 VM에 장애 발생 시 보조 VM이 즉시 주 VM 역할 시행
+4. 자동 복구: 보조 VM으로 전환 이후 vSpehere HA와 연동하여, 다른 호스트에 새로운 보조 VM을 자동 생성하여 이중화 상태 복구
+
+---
+
+### FT 설정 방법
+
+<img width="1346" height="852" alt="image" src="https://github.com/user-attachments/assets/baf48e3d-63ce-4791-87ff-72370223ca90" />
+출처: https://www.bdrshield.com/blog/what-is-vmware-vsphere-fault-tolerance-and-how-does-it-works-part14/
+
+1. FT 전용 커널 설정
+    1. FT를 다른 네트워크와 같이 사용할 시, 트래픽이 몰려서 서비스 중단이 가능하기 때문에 별도의 커널 설정이 필요
+    2. 이 때 생성하는 VMKernel의 경우 주 VM 상태 추적을 위해 Fault Tolerance logging을 체크 필요
+
+<img width="1372" height="1042" alt="image" src="https://github.com/user-attachments/assets/612c5ff5-dab5-4890-af15-82a86c4fa3af" />
+출처: https://www.bdrshield.com/blog/what-is-vmware-vsphere-fault-tolerance-and-how-does-it-works-part14/
+
+2. Fault Tolerance 설정
+    1. vSphere Client에서 FT를 설정할 VM 우클릭
+    2. Fault Tolerance 클릭
+    3. Turn On Fault Tolerance 클릭
+    4. 주 VM, 보조 VM 생성 확인
+
+---
+
+### FT 설계 시 주의 사항
+
+1. 리소스 제한: VM 당 최대 8개의 vCPU와 128GB 메모리까지만 지원
+2. 호스트 당 제한: 한 개의 호스트에 FT VM은 최대 4개, vCPU는 8개까지만 올릴 수 있음
+3. 네트워크: 실시간 데이터 복제를 위해 **FT Logging Network** 필요
+4. 디스크: 보조 VM은 독립된 vmdk 파일을 가지기 때문에 디스크 자원이 2배로 필요함
+
+---
+
+## 트러블 슈팅
+
+### 1. vCenter 서버 부팅 드라이브 인식 오류
+
+> **현상**: vCenter 서버 초기 구축 후 부팅 시, OS가 설치된 드라이브를 찾지 못하고 부팅이 실패하는 현상 발생
+
+- **원인**: 서버 내 여러 개의 드라이브 중 OS가 설치되지 않은 잘못된 드라이브가 부팅 우선순위 상단에 배치됨
+- **해결 방법**: 
+    1. 서버 부팅 시 BIOS(또는 Boot Menu) 진입
+    2. 부팅 우선순위(Boot Priority) 설정 확인
+    3. OS가 설치된 **NVMe 드라이브**를 최우선 순위로 변경 후 재부팅
+- **결과**: 정상적으로 vCenter 서버 OS 진입 및 서비스 활성화 확인
+
+---
+
+### 2. FT(Fault Tolerance) 리소스 부족 및 환경 이전
+
+> **현상**: 로컬 PC(RAM 32GB) 환경에서 FT 및 HA 구성을 시도했으나, Admission Control 정책 및 리소스 예약(Reservation) 조건 미충족으로 인해 장애 조치 구성 실패
+
+- **원인**: 
+    - **메모리 부족**: FT는 주 VM과 보조 VM의 메모리를 실시간 동기화하며 리소스를 2배로 점유함
+    - **Admission Control 제약**: 클러스터 내 Failover를 위한 여유 자원(Slot, Percentage 등)을 확보해야 하는데, 32GB 환경에서는 가상 ESXi 호스트 2대와 VM들을 동시에 구동하기에 메모리 용량이 절대적으로 부족함
+- **해결 방법**: 
+    1. 실습 환경을 로컬 PC에서 **고사양 vCenter 서버(RAM 128GB)**로 이전
+    2. 해당 서버 내부에서 **가상 ESXi 호스트 2대(Nested ESXi)**를 새롭게 생성
+    3. 충분한 메모리 자원을 바탕으로 클러스터 자원 여유 공간 확보
+- **결과**: 자원 부족 메시지 없이 HA 및 FT 기능이 정상적으로 활성화되었으며, 무중단 서비스 전환 테스트 성공
+
+---
