@@ -67,7 +67,7 @@
 
 ### 서비스 서버
 
-<img width="820" height="167" alt="2" src="https://github.com/user-attachments/assets/4004863d-1d31-46e5-be9b-f77f39b50918" />
+<img width="598" height="115" alt="2" src="https://github.com/user-attachments/assets/46a3ec0a-638a-4464-aa9a-203be03092c5" />
 
 | 서버 종류 | 할당 IP | 역할 |
 | --- | --- | --- |
@@ -81,8 +81,7 @@
 
 - 가상 트래픽을 물리 랜카드로 전달하는 중계기 역할
 
-<img width="1676" height="168" alt="3" src="https://github.com/user-attachments/assets/2ffbf08b-44c8-4add-b4a6-999b70c1102e" />
-
+<img width="1246" height="116" alt="1" src="https://github.com/user-attachments/assets/b44b31c8-4b44-4935-85ee-59cca2667a00" />
 
 | 가상 스위치 | 구성 요소 (Port Group / VMkerenel) | 연결된 외부 서비스 | 상세 설명 |
 | --- | --- | --- | --- |
@@ -96,8 +95,7 @@
 
 - 가상 호스트들을 구동하는 실제 물리 서버로, 모든 가상 트래픽은 Server ESXi의 vmnic을 통해 외부로 나감
 
-<img width="1627" height="481" alt="4" src="https://github.com/user-attachments/assets/7a64e529-9968-41c5-8bea-95204a095ad3" />
-
+<img width="1012" height="526" alt="3" src="https://github.com/user-attachments/assets/9e8d503f-1685-4766-bb38-119c715c8cd0" />
 
 | 종류 | 용도  | 할당 대역 | 설명 |
 | --- | --- | --- | --- |
