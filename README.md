@@ -109,8 +109,7 @@
 
 - 독립적으로 동작하는 가상 호스트들
 
-<img width="1919" height="478" alt="5" src="https://github.com/user-attachments/assets/52642742-c5a5-4d73-aa7a-4f9bab8a779d" />
-
+<img width="1608" height="377" alt="4" src="https://github.com/user-attachments/assets/f9c7675a-de41-4d68-aac5-01d26a15cf2f" />
 
 - 가상 호스트별 IP 설정
     - ESXi-01
